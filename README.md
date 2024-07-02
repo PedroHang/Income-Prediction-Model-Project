@@ -2,6 +2,8 @@
 
 Welcome to the Income Prediction Project! This guide will help you set up the project environment and install all the necessary dependencies. For the best experience, we recommend using Anaconda Navigator.
 
+**Note:** The project's `.ipynb` (Jupyter Notebook) is written in Portuguese (pt-BR).
+
 ## Quick Setup Instructions
 
 ### Step 1: Install Anaconda Navigator
@@ -18,4 +20,3 @@ Activate your new environment and open a terminal. Run the following command to 
 
 ```bash
 pip install patsy statsmodels ydata-profiling pandas matplotlib seaborn numpy streamlit scikit-learn
-
