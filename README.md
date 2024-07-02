@@ -29,3 +29,42 @@ Activate your new environment and open a terminal. Run the following command to 
 
 ```bash
 pip install patsy statsmodels ydata-profiling pandas matplotlib seaborn numpy streamlit scikit-learn
+```
+
+This command installs the following packages:
+
+- **patsy**: A Python library for describing statistical models and building design matrices.
+- **statsmodels**: Provides classes and functions for the estimation of many different statistical models.
+- **ydata-profiling**: A tool for generating profile reports from a pandas DataFrame.
+- **pandas**: A powerful data manipulation and analysis library.
+- **matplotlib**: A plotting library for creating static, animated, and interactive visualizations.
+- **seaborn**: A Python visualization library based on matplotlib, providing a high-level interface for drawing attractive statistical graphics.
+- **numpy**: A fundamental package for array computing with Python.
+- **streamlit**: A fast way to build and share data apps.
+- **scikit-learn**: A machine learning library for Python.
+
+### Step 4: Run the Project
+
+After installing the dependencies, you are ready to run the project. The project's Streamlit file, `income_prediction_streamlit.py`, is crucial for understanding the project.
+
+#### Running the Streamlit File
+
+1. Ensure you are in the correct directory where `income_prediction_streamlit.py` is located.
+2. Open a terminal.
+3. Activate your environment if it is not already activated:
+   ```bash
+   conda activate income-prediction-env
+
+4. Run the Streamlit file using the following command:
+```bash
+   streamlit run income_prediction_streamlit.py
+```
+5. This will start the Streamlit server, and you will see output in the terminal indicating that the app is running. You can view the app in your web browser by navigating to the URL provided, typically `http://localhost:8501`.
+
+---
+
+Thank you for your time!!
+
+
+
+
