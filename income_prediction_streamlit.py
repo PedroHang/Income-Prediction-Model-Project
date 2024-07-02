@@ -11,6 +11,7 @@ import patsy
 from sklearn.metrics import r2_score
 import plotly.express as px
 import plotly.graph_objects as go
+from sklearn.preprocessing import LabelEncoder
 
 sns.set(context='talk', style='ticks')
 
@@ -185,41 +186,84 @@ num_rows = st.slider('Select number of rows to display', min_value=5, max_value=
 st.text("An example of how the dataset actually looks like:")
 st.table(renda_df.head(num_rows))
 
-# Histogram for 'log_renda'
-st.write("## Distribution of Income (Log Scale)")
-fig = px.histogram(renda_df, x='log_renda', nbins=30, title='Income Distribution (Log Scale)', labels={'log_renda': 'Log of Income'})
-# Convert log_renda back to original scale for x-axis labels
-original_income = np.exp(renda_df['log_renda'])
-tickvals = np.log([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000])
-ticktext = ['1000', '2000', '3000', '4000', '5000', '6000', '7000', '8000', '9000', '10000']
-fig.update_xaxes(tickvals=tickvals, ticktext=ticktext)
+
+scale_option = st.radio('Choose scale for income display:', ('Log Scale', 'Original Scale'))
+
+bins = st.slider('Select number of bins to display', min_value=10, max_value=200, value=80)
+
+if scale_option == 'Log Scale':
+    # Histogram for 'log_renda'
+    st.write("## Distribution of Income (Log Scale)")
+    st.write("###### Note that, in this case, the values have been converted to the log scale so that outliers would not break the graph. (Some details might not make sense with this scale)")
+    fig = px.histogram(renda_df, x='log_renda', nbins=bins, title='Income Distribution (Log Scale)', labels={'log_renda': 'Income'})
+    # Convert log_renda back to original scale for x-axis labels
+    tickvals = np.log([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000])
+    ticktext = ['1000', '2000', '3000', '4000', '5000', '6000', '7000', '8000', '9000', '10000']
+    fig.update_xaxes(tickvals=tickvals, ticktext=ticktext)
+    fig.update_traces(marker_line_width=1.5, marker_line_color="black")  # Customize bin separation
+    st.plotly_chart(fig, use_container_width=True)
+
+else:
+    # Histogram for 'renda'
+    st.write("## Distribution of Income (Original Scale)")
+    fig = px.histogram(renda_df, x='renda', nbins=bins, title='Income Distribution', labels={'renda': 'Income'})
+    fig.update_traces(marker_line_width=1.5, marker_line_color="black")  # Customize bin separation
+    st.plotly_chart(fig, use_container_width=True)
+
+# Plot Box Plots
+if scale_option == 'Log Scale':
+    st.subheader("Box Plot of Income (Log Scale)")
+    st.write("This box plot shows the distribution of income on a logarithmic scale.")
+    fig = px.box(renda_df, y='log_renda', title='Income Box Plot (Log Scale)', labels={'log_renda': 'Income'})
+    fig.update_yaxes(tickvals=tickvals, ticktext=ticktext)
+else:
+    st.subheader("Box Plot of Income (Original Scale)")
+    st.write("This box plot shows the distribution of income on the original scale. It is almost impossible to get any insights from this type of visualization")
+    fig = px.box(renda_df, y='renda', title='Income Box Plot', labels={'renda': 'Income'})
+fig.update_layout(
+    height=600,  # Increase the height to unsqueeze the box plot
+    width=800,   # Increase the width to provide more space
+    margin=dict(l=50, r=50, t=50, b=50)  # Adjust margins to provide more padding around the plot
+)
 st.plotly_chart(fig, use_container_width=True)
 
-# Box Plot for 'renda'
-st.write("## Box Plot of Income")
-fig = px.box(renda_df, y='renda', title='Income Box Plot')
-st.plotly_chart(fig, use_container_width=True)
 
-# Bar Plot for 'tipo_renda'
-st.write("## Count of Different Income Types")
-fig = px.bar(renda_df, x='tipo_renda', title='Count of Different Income Types')
-st.plotly_chart(fig, use_container_width=True)
+label_encoders = {}
+for column in renda_df.select_dtypes(include=['object', 'bool']).columns:
+    le = LabelEncoder()
+    renda_df[column] = le.fit_transform(renda_df[column])
+    label_encoders[column] = le
 
-# Correlation Heatmap
-st.write("## Correlation Heatmap")
+# Compute the correlation matrix
 corr = renda_df.corr()
+
+# Add description for the heatmap
+st.write("""
+## Correlation Heatmap
+
+The heatmap below shows the correlation between different variables in the dataset. A correlation value closer to 1 indicates a strong positive relationship, while a value closer to -1 indicates a strong negative relationship. Values around 0 indicate no correlation.
+""")
+
+# Plot the heatmap
 fig = go.Figure(data=go.Heatmap(
     z=corr.values,
-    x=corr.index.values,
-    y=corr.columns.values,
-    colorscale='Viridis'))
-fig.update_layout(title='Correlation Heatmap')
+    x=corr.columns,
+    y=corr.columns,
+    colorscale='Viridis',
+    zmin=-1, zmax=1
+))
+
+# Adjust layout for a more square shape
+fig.update_layout(
+    title='Correlation Heatmap',
+    xaxis_nticks=len(corr.columns),
+    yaxis_nticks=len(corr.columns),
+    width=600,  # Adjust the width as needed
+    height=600  # Adjust the height as needed
+)
+
 st.plotly_chart(fig, use_container_width=True)
 
-# Scatter Plot of 'idade' vs 'renda'
-st.write("## Scatter Plot of Age vs Income")
-fig = px.scatter(renda_df, x='idade', y='renda', title='Age vs Income')
-st.plotly_chart(fig, use_container_width=True)
 
 train_df, test_df = train_test_split(renda_df, test_size=0.2, random_state=40)
 formula = (
