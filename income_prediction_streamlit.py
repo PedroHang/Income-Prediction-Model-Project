@@ -9,6 +9,8 @@ import statsmodels.formula.api as smf
 from sklearn.model_selection import train_test_split
 import patsy
 from sklearn.metrics import r2_score
+import plotly.express as px
+import plotly.graph_objects as go
 
 sns.set(context='talk', style='ticks')
 
@@ -182,6 +184,42 @@ num_rows = st.slider('Select number of rows to display', min_value=5, max_value=
 
 st.text("An example of how the dataset actually looks like:")
 st.table(renda_df.head(num_rows))
+
+# Histogram for 'log_renda'
+st.write("## Distribution of Income (Log Scale)")
+fig = px.histogram(renda_df, x='log_renda', nbins=30, title='Income Distribution (Log Scale)', labels={'log_renda': 'Log of Income'})
+# Convert log_renda back to original scale for x-axis labels
+original_income = np.exp(renda_df['log_renda'])
+tickvals = np.log([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000])
+ticktext = ['1000', '2000', '3000', '4000', '5000', '6000', '7000', '8000', '9000', '10000']
+fig.update_xaxes(tickvals=tickvals, ticktext=ticktext)
+st.plotly_chart(fig, use_container_width=True)
+
+# Box Plot for 'renda'
+st.write("## Box Plot of Income")
+fig = px.box(renda_df, y='renda', title='Income Box Plot')
+st.plotly_chart(fig, use_container_width=True)
+
+# Bar Plot for 'tipo_renda'
+st.write("## Count of Different Income Types")
+fig = px.bar(renda_df, x='tipo_renda', title='Count of Different Income Types')
+st.plotly_chart(fig, use_container_width=True)
+
+# Correlation Heatmap
+st.write("## Correlation Heatmap")
+corr = renda_df.corr()
+fig = go.Figure(data=go.Heatmap(
+    z=corr.values,
+    x=corr.index.values,
+    y=corr.columns.values,
+    colorscale='Viridis'))
+fig.update_layout(title='Correlation Heatmap')
+st.plotly_chart(fig, use_container_width=True)
+
+# Scatter Plot of 'idade' vs 'renda'
+st.write("## Scatter Plot of Age vs Income")
+fig = px.scatter(renda_df, x='idade', y='renda', title='Age vs Income')
+st.plotly_chart(fig, use_container_width=True)
 
 train_df, test_df = train_test_split(renda_df, test_size=0.2, random_state=40)
 formula = (
