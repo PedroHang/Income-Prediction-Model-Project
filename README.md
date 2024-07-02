@@ -29,4 +29,3 @@ Activate your new environment and open a terminal. Run the following command to 
 
 ```bash
 pip install patsy statsmodels ydata-profiling pandas matplotlib seaborn numpy streamlit scikit-learn
-
