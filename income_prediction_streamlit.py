@@ -227,6 +227,31 @@ fig.update_layout(
 )
 st.plotly_chart(fig, use_container_width=True)
 
+if scale_option == 'Log Scale':
+    st.subheader("Scatter Plot of Tempo de Emprego vs Log Renda")
+    st.write("This scatter plot shows the relationship between employment duration and income on a logarithmic scale with a regression line.")
+    fig = px.scatter(renda_df.head(2000), x='tempo_emprego', y='log_renda', trendline='ols', 
+                     labels={'tempo_emprego': 'Tempo de Emprego (em anos)', 'log_renda': 'Log of Renda'},
+                     title='Renda vs. Tempo de Emprego (em anos)',
+                     height=600)  # Increase the height of the plot
+    # Transform log_renda back to original scale for y-axis tick labels
+    tickvals = np.log([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000])
+    ticktext = ['1000', '2000', '3000', '4000', '5000', '6000', '7000', '8000', '9000', '10000']
+    fig.update_yaxes(tickvals=tickvals, ticktext=ticktext)
+else:
+    st.subheader("Scatter Plot of Tempo de Emprego vs Renda")
+    st.write("This scatter plot shows the relationship between employment duration and income on the original scale with a regression line.")
+    fig = px.scatter(renda_df.head(2000), x='tempo_emprego', y='renda', trendline='ols', 
+                     labels={'tempo_emprego': 'Tempo de Emprego (em anos)', 'renda': 'Renda'},
+                     title='Renda vs. Tempo de Emprego (em anos)',
+                     height=600)  # Increase the height of the plot
+
+# Customize trendline color and scatter point size
+fig.update_traces(marker=dict(size=5), line=dict(color='green'))
+
+# Display the plot in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
 
 label_encoders = {}
 for column in renda_df.select_dtypes(include=['object', 'bool']).columns:
@@ -263,6 +288,7 @@ fig.update_layout(
 )
 
 st.plotly_chart(fig, use_container_width=True)
+
 
 
 train_df, test_df = train_test_split(renda_df, test_size=0.2, random_state=40)
