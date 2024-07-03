@@ -361,70 +361,6 @@ y_train, X_train = patsy.dmatrices(formula_like=formula, data=train_df)
 y_test, X_test = patsy.dmatrices(formula_like=formula, data=test_df)
 """, language='python')
 
-# Ridge and Lasso regression
-st.write("""
-### Ridge and Lasso Regression
-Ridge and Lasso regression models are fitted using different alpha values. Ridge regression includes a penalty for the sum of squared coefficients (L2 penalty), while Lasso regression includes a penalty for the absolute value of the coefficients (L1 penalty).
-""")
-st.code("""
-alphas = [0, 0.001, 0.005, 0.01, 0.05, 0.1]
-r2_ridge = []
-r2_lasso = []
-
-for alpha in alphas:
-    modelo = sm.OLS(y_train, X_train)
-    
-    reg_ridge = modelo.fit_regularized(method='elastic_net',
-                                     refit=True,
-                                     L1_wt=0, # Ridge
-                                     alpha=alpha)
-    
-    reg_lasso = modelo.fit_regularized(method='elastic_net',
-                                     refit=True,
-                                     L1_wt=1, # Lasso
-                                     alpha=alpha)
-    
-    y_pred_ridge = reg_ridge.predict(X_test)
-    y_pred_lasso = reg_lasso.predict(X_test)
-    aux = r2_score(y_test, y_pred_ridge)
-    tmp = r2_score(y_test, y_pred_lasso)
-    
-    r2_ridge.append(aux)
-    r2_lasso.append(tmp)
-""", language='python')
-
-# Fit the final model
-st.write("""
-### Fitting the Final Model
-A final Ridge regression model is fitted with alpha set to 0 (equivalent to ordinary least squares regression).
-""")
-st.code("""
-modelo = sm.OLS(y_train, X_train)
-reg = modelo.fit_regularized(method='elastic_net',
-                                     refit=True,
-                                     L1_wt=0, # Ridge
-                                     alpha=0)
-""", language='python')
-
-# Predict and create a DataFrame for predictions
-st.write("""
-### Predictions and Evaluation
-The final model is used to predict on the test set. A DataFrame is created to compare the true and predicted values, both in log scale and original scale.
-""")
-st.code("""
-y_pred = reg.predict(X_test)
-y_test = y_test.ravel()
-
-predictions = pd.DataFrame({
-    'Valor Verdadeiro (log)': y_test,
-    'Valor Predito (log)': y_pred,
-    'Diferença (Log)': (y_test - y_pred),
-    'Valor Verdadeiro': np.exp(y_test), 
-    'Valor Predito': np.exp(y_pred),
-    'Diferença': ((np.exp(y_test)) - (np.exp(y_pred))),
-})
-""", language='python')
-
 train_df, test_df = train_test_split(renda_df, test_size=0.2, random_state=40)
 
 formula = (
@@ -475,12 +411,87 @@ for alpha in alphas:
     r2_ridge.append(aux)
     r2_lasso.append(tmp)
 
+tab = pd.DataFrame({'alpha':alphas,
+              'R2 (Ridge)': r2_ridge,  'R2 (Lasso)': r2_lasso})
+
 modelo = sm.OLS(y_train, X_train)
 reg = modelo.fit_regularized(method='elastic_net',
                                      refit=True,
                                      L1_wt= 0, #ridge
                                      alpha = 0)
 
+y_pred = reg.predict(X_test)
+y_test = y_test.ravel()
+
+predictions = pd.DataFrame({
+    'True Value (log)': y_test,
+    'Predicted Value (log)': y_pred,
+    'Difference (Log)': (y_test - y_pred),
+    'True Value': np.exp(y_test), 
+    'Predicted Value': np.exp(y_pred),
+    'Difference': ((np.exp(y_test)) - (np.exp(y_pred))),
+})
+
+st.write("""
+### Ridge and Lasso Regression
+Ridge and Lasso regression models are fitted using different alpha values. Ridge regression includes a penalty for the sum of squared coefficients (L2 penalty), while Lasso regression includes a penalty for the absolute value of the coefficients (L1 penalty).
+""")
+st.code("""
+alphas = [0, 0.001, 0.005, 0.01, 0.05, 0.1]
+r2_ridge = []
+r2_lasso = []
+
+for alpha in alphas:
+    modelo = sm.OLS(y_train, X_train)
+    
+    reg_ridge = modelo.fit_regularized(method='elastic_net',
+                                     refit=True,
+                                     L1_wt=0, # Ridge
+                                     alpha=alpha)
+    
+    reg_lasso = modelo.fit_regularized(method='elastic_net',
+                                     refit=True,
+                                     L1_wt=1, # Lasso
+                                     alpha=alpha)
+    
+    y_pred_ridge = reg_ridge.predict(X_test)
+    y_pred_lasso = reg_lasso.predict(X_test)
+    aux = r2_score(y_test, y_pred_ridge)
+    tmp = r2_score(y_test, y_pred_lasso)
+    
+    r2_ridge.append(aux)
+    r2_lasso.append(tmp)
+""", language='python')
+
+st.write("""
+We can use a simple table to capture the relationship between the alpha values and the methods used to train the model.
+""")
+
+st.write(tab)
+
+st.write("""
+The highest values for R2 were obtained at alpha = 0
+""")
+
+# Fit the final model
+st.write("""
+### Fitting the Final Model
+A final Ridge regression model is fitted with alpha set to 0 (equivalent to ordinary least squares regression).
+""")
+st.code("""
+modelo = sm.OLS(y_train, X_train)
+reg = modelo.fit_regularized(method='elastic_net',
+                                     refit=True,
+                                     L1_wt=0, # Ridge
+                                     alpha=0)
+""", language='python')
+
+# Predict and create a DataFrame for predictions
+st.write("""
+### Predictions and Evaluation
+The final model is used to predict on the test set. A DataFrame is created to compare the true and predicted values, both in log scale and original scale.
+""")
+st.code("""
 y_pred = reg.predict(X_test)
 y_test = y_test.ravel()
 
@@ -492,6 +503,7 @@ predictions = pd.DataFrame({
     'Valor Predito': np.exp(y_pred),
     'Diferença': ((np.exp(y_test)) - (np.exp(y_pred))),
 })
+""", language='python')
 
 # Display the predictions DataFrame
 st.write("### Predictions")
