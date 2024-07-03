@@ -163,7 +163,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-##################### Don't touch ####################################
 
 renda = pd.read_csv('./input/previsao_de_renda.csv')
 renda_df = (renda
@@ -178,7 +177,7 @@ renda_df = (renda_df
     .assign(log_renda = lambda x: np.log(x['renda']))
 )
 
-############################ Dont't touch ################################
+
 
 num_rows = st.slider('Select number of rows to display', min_value=5, max_value=100, value=9)
 
@@ -191,25 +190,24 @@ scale_option = st.radio('Choose scale for income display:', ('Log Scale', 'Origi
 bins = st.slider('Select number of bins to display', min_value=10, max_value=200, value=80)
 
 if scale_option == 'Log Scale':
-    # Histogram for 'log_renda'
+    
     st.write("## Distribution of Income (Log Scale)")
     st.write("###### Note that, in this case, the values have been converted to the log scale so that outliers would not break the graph. (Some details might not make sense with this scale)")
     fig = px.histogram(renda_df, x='log_renda', nbins=bins, title='Income Distribution (Log Scale)', labels={'log_renda': 'Income'})
-    # Convert log_renda back to original scale for x-axis labels
+   
     tickvals = np.log([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000])
     ticktext = ['1000', '2000', '3000', '4000', '5000', '6000', '7000', '8000', '9000', '10000']
     fig.update_xaxes(tickvals=tickvals, ticktext=ticktext)
-    fig.update_traces(marker_line_width=1.5, marker_line_color="black")  # Customize bin separation
+    fig.update_traces(marker_line_width=1.5, marker_line_color="black")  
     st.plotly_chart(fig, use_container_width=True)
 
 else:
-    # Histogram for 'renda'
     st.write("## Distribution of Income (Original Scale)")
     fig = px.histogram(renda_df, x='renda', nbins=bins, title='Income Distribution', labels={'renda': 'Income'})
-    fig.update_traces(marker_line_width=1.5, marker_line_color="black")  # Customize bin separation
+    fig.update_traces(marker_line_width=1.5, marker_line_color="black")  
     st.plotly_chart(fig, use_container_width=True)
 
-# Plot Box Plots
+# Box Plots
 if scale_option == 'Log Scale':
     st.subheader("Box Plot of Income (Log Scale)")
     st.write("This box plot shows the distribution of income on a logarithmic scale.")
@@ -220,9 +218,9 @@ else:
     st.write("This box plot shows the distribution of income on the original scale. It is almost impossible to get any insights from this type of visualization")
     fig = px.box(renda_df, y='renda', title='Income Box Plot', labels={'renda': 'Income'})
 fig.update_layout(
-    height=600,  # Increase the height to unsqueeze the box plot
-    width=800,   # Increase the width to provide more space
-    margin=dict(l=50, r=50, t=50, b=50)  # Adjust margins to provide more padding around the plot
+    height=600, 
+    width=800,  
+    margin=dict(l=50, r=50, t=50, b=50) 
 )
 st.plotly_chart(fig, use_container_width=True)
 
@@ -232,8 +230,8 @@ if scale_option == 'Log Scale':
     fig = px.scatter(renda_df.head(2000), x='tempo_emprego', y='log_renda', trendline='ols', 
                      labels={'tempo_emprego': 'Employment time (years)', 'log_renda': 'Log of Renda'},
                      title='Income vs. Employment Time (years)',
-                     height=600)  # Increase the height of the plot
-    # Transform log_renda back to original scale for y-axis tick labels
+                     height=600)  
+
     tickvals = np.log([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000])
     ticktext = ['1000', '2000', '3000', '4000', '5000', '6000', '7000', '8000', '9000', '10000']
     fig.update_yaxes(tickvals=tickvals, ticktext=ticktext)
@@ -243,12 +241,10 @@ else:
     fig = px.scatter(renda_df.head(2000), x='tempo_emprego', y='renda', trendline='ols', 
                      labels={'tempo_emprego': 'Employment time (years)', 'renda': 'Income'},
                      title='Income vs. Employment Time (years)',
-                     height=600)  # Increase the height of the plot
+                     height=600) 
 
-# Customize trendline color and scatter point size
 fig.update_traces(marker=dict(size=5), line=dict(color='green'))
 
-# Display the plot in Streamlit
 st.plotly_chart(fig, use_container_width=True)
 
 
@@ -258,17 +254,15 @@ for column in renda_df.select_dtypes(include=['object', 'bool']).columns:
     renda_df[column] = le.fit_transform(renda_df[column])
     label_encoders[column] = le
 
-# Compute the correlation matrix
 corr = renda_df.corr()
 
-# Add description for the heatmap
 st.write("""
 ## Correlation Heatmap
 
 The heatmap below shows the correlation between different variables in the dataset. A correlation value closer to 1 indicates a strong positive relationship, while a value closer to -1 indicates a strong negative relationship. Values around 0 indicate no correlation.
 """)
 
-# Plot the heatmap
+#Heatmap
 fig = go.Figure(data=go.Heatmap(
     z=corr.values,
     x=corr.columns,
@@ -277,27 +271,22 @@ fig = go.Figure(data=go.Heatmap(
     zmin=-1, zmax=1
 ))
 
-# Adjust layout for a more square shape
 fig.update_layout(
     title='Correlation Heatmap',
     xaxis_nticks=len(corr.columns),
     yaxis_nticks=len(corr.columns),
-    width=600,  # Adjust the width as needed
-    height=600  # Adjust the height as needed
+    width=600, 
+    height=600 
 )
 
 st.plotly_chart(fig, use_container_width=True)
 
-# Big Title
 st.title("Model Training")
 
-# Comment about CRISP-DM methodology
 st.write("The whole process of exploratory data analysis together with model training and evaluation was made following the CRISP-DM methodology.")
 
-# Introduction to the packages used for model training
 st.write("Here follows the packages that were used to train the model:")
 
-# Display the code cell with the imports
 st.code("""
 import patsy
 import statsmodels.api as sm
@@ -306,7 +295,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 """, language='python')
 
-# Explanation of what each package does
 st.write("""
 - **patsy**: A Python library for describing statistical models and building design matrices.
 - **statsmodels.api**: Provides classes and functions for the estimation of many different statistical models, as well as for conducting statistical tests and statistical data exploration.
@@ -324,7 +312,6 @@ st.code("""
 train_df, test_df = train_test_split(renda_df, test_size=0.2, random_state=40)
 """, language='python')
 
-# Define the formula for the model
 st.write("""
 ### Model Formula
 A formula is defined to specify the relationship between the dependent variable (log_renda) and the independent variables.
@@ -473,7 +460,7 @@ st.write("""
 The highest values for R2 were obtained at alpha = 0
 """)
 
-# Fit the final model
+
 st.write("""
 ### Fitting the Final Model
 A final Ridge regression model is fitted with alpha set to 0 (equivalent to ordinary least squares regression).
@@ -486,7 +473,6 @@ reg = modelo.fit_regularized(method='elastic_net',
                                      alpha=0)
 """, language='python')
 
-# Predict and create a DataFrame for predictions
 st.write("""
 ### Predictions and Evaluation
 The final model is used to predict on the test set. A DataFrame is created to compare the true and predicted values, both in log scale and original scale.
@@ -505,25 +491,26 @@ predictions = pd.DataFrame({
 })
 """, language='python')
 
-# Display the predictions DataFrame
 st.write("### Predictions")
 st.write(predictions)
 
-# Explanation of the graph
 st.write("""
 ### True vs Predicted Values
 The following scatter plot shows the true values versus the predicted values. The red dashed line represents perfect predictions, where the predicted values exactly match the true values.
 """)
 
-# Switch button to alternate between log scale and original scale
 scale_option = st.radio('Choose scale for the scatter plot:', ('Log Scale', 'Original Scale'))
 
-# Create the scatter plot with Plotly
 if scale_option == 'Log Scale':
     fig = px.scatter(predictions, x='True Value (log)', y='Predicted Value (log)', 
                      labels={'True Value (log)': 'True Value (log)', 'Predicted Value (log)': 'Predicted Value (log)'},
-                     title='True Values vs Predicted Values (Log Scale)')
-    # Add a line for perfect predictions
+                     title='True Values vs Predicted Values (Log Scale)',
+                     height=700) 
+    tickvals = np.log([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000])
+    ticktext = ['1000', '2000', '3000', '4000', '5000', '6000', '7000', '8000', '9000', '10000']
+    fig.update_yaxes(tickvals=tickvals, ticktext=ticktext)
+    fig.update_xaxes(tickvals=tickvals, ticktext=ticktext)
+
     max_val = max(predictions[['True Value (log)', 'Predicted Value (log)']].max())
     min_val = min(predictions[['True Value (log)', 'Predicted Value (log)']].min())
     fig.add_shape(type="line",
@@ -532,17 +519,15 @@ if scale_option == 'Log Scale':
 else:
     fig = px.scatter(predictions, x='True Value', y='Predicted Value', 
                      labels={'True Value': 'True Value', 'Predicted Value': 'Predicted Value'},
-                     title='True Values vs Predicted Values (Original Scale)')
-    # Add a line for perfect predictions
+                     title='True Values vs Predicted Values (Original Scale)',
+                     height=700) 
     max_val = max(predictions[['True Value', 'Predicted Value']].max())
     min_val = min(predictions[['True Value', 'Predicted Value']].min())
     fig.add_shape(type="line",
                   x0=min_val, y0=min_val, x1=max_val, y1=max_val,
                   line=dict(color="Red", dash="dash"))
 
-# Customize scatter point size
 fig.update_traces(marker=dict(size=5))
 
-# Display the plot in Streamlit
 st.plotly_chart(fig, use_container_width=True)
 
