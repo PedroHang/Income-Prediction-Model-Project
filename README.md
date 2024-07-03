@@ -28,7 +28,7 @@ Open Anaconda Navigator and create a new environment for this project. This help
 Activate your new environment and open a terminal. Run the following command to install all required dependencies:
 
 ```bash
-pip install patsy statsmodels ydata-profiling pandas matplotlib seaborn numpy streamlit scikit-learn
+pip install patsy statsmodels ydata-profiling pandas matplotlib seaborn numpy streamlit scikit-learn plotly
 ```
 
 This command installs the following packages:
