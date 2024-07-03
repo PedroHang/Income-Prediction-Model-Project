@@ -496,15 +496,53 @@ y_pred = reg.predict(X_test)
 y_test = y_test.ravel()
 
 predictions = pd.DataFrame({
-    'Valor Verdadeiro (log)': y_test,
-    'Valor Predito (log)': y_pred,
-    'Diferença (Log)': (y_test - y_pred),
-    'Valor Verdadeiro': np.exp(y_test), 
-    'Valor Predito': np.exp(y_pred),
-    'Diferença': ((np.exp(y_test)) - (np.exp(y_pred))),
+    'True Value (log)': y_test,
+    'Predicted Value (log)': y_pred,
+    'Difference (Log)': (y_test - y_pred),
+    'True Value': np.exp(y_test), 
+    'Predicted Value': np.exp(y_pred),
+    'Difference': ((np.exp(y_test)) - (np.exp(y_pred))),
 })
 """, language='python')
 
 # Display the predictions DataFrame
 st.write("### Predictions")
 st.write(predictions)
+
+# Explanation of the graph
+st.write("""
+### True vs Predicted Values
+The following scatter plot shows the true values versus the predicted values. The red dashed line represents perfect predictions, where the predicted values exactly match the true values.
+""")
+
+# Switch button to alternate between log scale and original scale
+scale_option = st.radio('Choose scale for the scatter plot:', ('Log Scale', 'Original Scale'))
+
+# Create the scatter plot with Plotly
+if scale_option == 'Log Scale':
+    fig = px.scatter(predictions, x='True Value (log)', y='Predicted Value (log)', 
+                     labels={'True Value (log)': 'True Value (log)', 'Predicted Value (log)': 'Predicted Value (log)'},
+                     title='True Values vs Predicted Values (Log Scale)')
+    # Add a line for perfect predictions
+    max_val = max(predictions[['True Value (log)', 'Predicted Value (log)']].max())
+    min_val = min(predictions[['True Value (log)', 'Predicted Value (log)']].min())
+    fig.add_shape(type="line",
+                  x0=min_val, y0=min_val, x1=max_val, y1=max_val,
+                  line=dict(color="Red", dash="dash"))
+else:
+    fig = px.scatter(predictions, x='True Value', y='Predicted Value', 
+                     labels={'True Value': 'True Value', 'Predicted Value': 'Predicted Value'},
+                     title='True Values vs Predicted Values (Original Scale)')
+    # Add a line for perfect predictions
+    max_val = max(predictions[['True Value', 'Predicted Value']].max())
+    min_val = min(predictions[['True Value', 'Predicted Value']].min())
+    fig.add_shape(type="line",
+                  x0=min_val, y0=min_val, x1=max_val, y1=max_val,
+                  line=dict(color="Red", dash="dash"))
+
+# Customize scatter point size
+fig.update_traces(marker=dict(size=5))
+
+# Display the plot in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
