@@ -7,7 +7,6 @@ import patsy
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from sklearn.model_selection import train_test_split
-import patsy
 from sklearn.metrics import r2_score
 import plotly.express as px
 import plotly.graph_objects as go
@@ -228,22 +227,22 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 if scale_option == 'Log Scale':
-    st.subheader("Scatter Plot of Tempo de Emprego vs Log Renda")
+    st.subheader("Scatter Plot of Employment time vs. Income (Log Scale)")
     st.write("This scatter plot shows the relationship between employment duration and income on a logarithmic scale with a regression line.")
     fig = px.scatter(renda_df.head(2000), x='tempo_emprego', y='log_renda', trendline='ols', 
-                     labels={'tempo_emprego': 'Tempo de Emprego (em anos)', 'log_renda': 'Log of Renda'},
-                     title='Renda vs. Tempo de Emprego (em anos)',
+                     labels={'tempo_emprego': 'Employment time (years)', 'log_renda': 'Log of Renda'},
+                     title='Income vs. Employment Time (years)',
                      height=600)  # Increase the height of the plot
     # Transform log_renda back to original scale for y-axis tick labels
     tickvals = np.log([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000])
     ticktext = ['1000', '2000', '3000', '4000', '5000', '6000', '7000', '8000', '9000', '10000']
     fig.update_yaxes(tickvals=tickvals, ticktext=ticktext)
 else:
-    st.subheader("Scatter Plot of Tempo de Emprego vs Renda")
+    st.subheader("Scatter Plot of Employment time vs. Income (Original Scale)")
     st.write("This scatter plot shows the relationship between employment duration and income on the original scale with a regression line.")
     fig = px.scatter(renda_df.head(2000), x='tempo_emprego', y='renda', trendline='ols', 
-                     labels={'tempo_emprego': 'Tempo de Emprego (em anos)', 'renda': 'Renda'},
-                     title='Renda vs. Tempo de Emprego (em anos)',
+                     labels={'tempo_emprego': 'Employment time (years)', 'renda': 'Income'},
+                     title='Income vs. Employment Time (years)',
                      height=600)  # Increase the height of the plot
 
 # Customize trendline color and scatter point size
@@ -289,9 +288,145 @@ fig.update_layout(
 
 st.plotly_chart(fig, use_container_width=True)
 
+# Big Title
+st.title("Model Training")
 
+# Comment about CRISP-DM methodology
+st.write("The whole process of exploratory data analysis together with model training and evaluation was made following the CRISP-DM methodology.")
+
+# Introduction to the packages used for model training
+st.write("Here follows the packages that were used to train the model:")
+
+# Display the code cell with the imports
+st.code("""
+import patsy
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+""", language='python')
+
+# Explanation of what each package does
+st.write("""
+- **patsy**: A Python library for describing statistical models and building design matrices.
+- **statsmodels.api**: Provides classes and functions for the estimation of many different statistical models, as well as for conducting statistical tests and statistical data exploration.
+- **statsmodels.formula.api**: Provides a convenient interface for specifying statistical models using formulas.
+- **train_test_split**: A function from scikit-learn that splits the data into random train and test subsets.
+- **r2_score**: A function from scikit-learn that computes the coefficient of determination, \(R^2\), to evaluate the goodness of fit of the model.
+""")
+
+# Train-test split
+st.write("""
+### Train-Test Split
+The data is split into training and testing sets using an 80-20 split. This allows us to train the model on one portion of the data and test it on another, ensuring that the model generalizes well to unseen data.
+""")
+st.code("""
+train_df, test_df = train_test_split(renda_df, test_size=0.2, random_state=40)
+""", language='python')
+
+# Define the formula for the model
+st.write("""
+### Model Formula
+A formula is defined to specify the relationship between the dependent variable (log_renda) and the independent variables.
+""")
+st.code("""
+formula = (
+    'log_renda ~ '
+    'C(sexo) + '
+    'C(posse_de_veiculo) * C(posse_de_imovel) + '
+    'qtd_filhos + '
+    'C(tipo_renda) + '
+    'C(posse_de_imovel) + '
+    'C(educacao) + '
+    'C(estado_civil) + '
+    'C(tipo_residencia) + '
+    'idade + '
+    'tempo_emprego + '
+    'qt_pessoas_residencia + '
+    'tempo_emprego_idade_ratio'
+)
+""", language='python')
+
+st.write("""
+Some adjustments were made using the features presented in the formula in order to obtain a better R2 value with the model.
+""")
+
+# Create design matrices
+st.write("""
+### Design Matrices
+The Patsy library is used to create design matrices from the formula and the data.
+""")
+st.code("""
+y_train, X_train = patsy.dmatrices(formula_like=formula, data=train_df)
+y_test, X_test = patsy.dmatrices(formula_like=formula, data=test_df)
+""", language='python')
+
+# Ridge and Lasso regression
+st.write("""
+### Ridge and Lasso Regression
+Ridge and Lasso regression models are fitted using different alpha values. Ridge regression includes a penalty for the sum of squared coefficients (L2 penalty), while Lasso regression includes a penalty for the absolute value of the coefficients (L1 penalty).
+""")
+st.code("""
+alphas = [0, 0.001, 0.005, 0.01, 0.05, 0.1]
+r2_ridge = []
+r2_lasso = []
+
+for alpha in alphas:
+    modelo = sm.OLS(y_train, X_train)
+    
+    reg_ridge = modelo.fit_regularized(method='elastic_net',
+                                     refit=True,
+                                     L1_wt=0, # Ridge
+                                     alpha=alpha)
+    
+    reg_lasso = modelo.fit_regularized(method='elastic_net',
+                                     refit=True,
+                                     L1_wt=1, # Lasso
+                                     alpha=alpha)
+    
+    y_pred_ridge = reg_ridge.predict(X_test)
+    y_pred_lasso = reg_lasso.predict(X_test)
+    aux = r2_score(y_test, y_pred_ridge)
+    tmp = r2_score(y_test, y_pred_lasso)
+    
+    r2_ridge.append(aux)
+    r2_lasso.append(tmp)
+""", language='python')
+
+# Fit the final model
+st.write("""
+### Fitting the Final Model
+A final Ridge regression model is fitted with alpha set to 0 (equivalent to ordinary least squares regression).
+""")
+st.code("""
+modelo = sm.OLS(y_train, X_train)
+reg = modelo.fit_regularized(method='elastic_net',
+                                     refit=True,
+                                     L1_wt=0, # Ridge
+                                     alpha=0)
+""", language='python')
+
+# Predict and create a DataFrame for predictions
+st.write("""
+### Predictions and Evaluation
+The final model is used to predict on the test set. A DataFrame is created to compare the true and predicted values, both in log scale and original scale.
+""")
+st.code("""
+y_pred = reg.predict(X_test)
+y_test = y_test.ravel()
+
+predictions = pd.DataFrame({
+    'Valor Verdadeiro (log)': y_test,
+    'Valor Predito (log)': y_pred,
+    'Diferença (Log)': (y_test - y_pred),
+    'Valor Verdadeiro': np.exp(y_test), 
+    'Valor Predito': np.exp(y_pred),
+    'Diferença': ((np.exp(y_test)) - (np.exp(y_pred))),
+})
+""", language='python')
 
 train_df, test_df = train_test_split(renda_df, test_size=0.2, random_state=40)
+
 formula = (
     'log_renda ~ '
     'C(sexo) + '
@@ -308,6 +443,7 @@ formula = (
     'qt_pessoas_residencia + '
     'tempo_emprego_idade_ratio'
 )
+
 y_train, X_train= patsy.dmatrices(formula_like=formula, data=train_df)
 y_test, X_test = patsy.dmatrices(formula_like=formula, data=test_df)
 
@@ -357,3 +493,6 @@ predictions = pd.DataFrame({
     'Diferença': ((np.exp(y_test)) - (np.exp(y_pred))),
 })
 
+# Display the predictions DataFrame
+st.write("### Predictions")
+st.write(predictions)
