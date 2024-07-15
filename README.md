@@ -1,5 +1,11 @@
 # Income Prediction Project
 
+
+
+https://github.com/PedroHang/Income-Prediction-Model-Project/assets/46850459/13b3e316-a35f-4ac5-97b5-af276ae06c06
+
+
+
 Welcome to the Income Prediction Project! This guide will help you set up the project environment and install all the necessary dependencies. For the best experience, we recommend using Anaconda Navigator.
 
 **Notes:**
